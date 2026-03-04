@@ -3170,6 +3170,10 @@ body.reward-open .statusPanel {
           <label class="cfgLabel">初始发放资产卡数量（默认 5）</label>
           <input id="cfgStarterCount" type="number" min="1" max="10" value="5" class="cfgInput"/>
         </div>
+        <div class="cfgField">
+          <label class="cfgLabel">每次开盘后可选资产卡数量（默认 3）</label>
+          <input id="cfgRewardCount" type="number" min="1" max="6" value="3" class="cfgInput"/>
+        </div>
       </div>
     </div>
   </div>
@@ -3507,6 +3511,33 @@ body.reward-open .statusPanel {
 // ═══════════════════════════════════════
 //  幸运房东 12轮关卡配置 (可配置)
 // ═══════════════════════════════════════
+const GAME_BALANCE = {
+  starterAssetCount: 5,
+  rewardAssetChoiceCount: 3,
+  cfgStorageKeys: {
+    level: 'lsc_level_config_v2',
+    card: 'lsc_card_config_v2',
+    general: 'lsc_general_config_v1'
+  },
+  tickerItems: [
+    "沪A·量子科技  +3","深B·蓝海制药  -1","创业·极光AI  +2","港股·远航航运  -2",
+    "期权·波动率  +1","基金·底子是好的  +1","股票·潜力股  +3","工具·一次性内幕  0",
+    "人类·电诈专员  -1","指数·开盘撮合中…"
+  ],
+  roles: [
+    { id:'rookie', name:'炒股小白', stars:1, baseHp:5, effectText:'无', startAssets:[] },
+    { id:'middle', name:'稳健中产', stars:1, baseHp:4, effectText:'游戏开始时，资产里获得 3 张小存单。', startAssets:[{name:'小存单', count:3}] },
+    { id:'tbd1', name:'？？？', stars:0, baseHp:0, effectText:'敬请期待', disabled:true, startAssets:[] },
+    { id:'tbd2', name:'？？？', stars:0, baseHp:0, effectText:'敬请期待', disabled:true, startAssets:[] },
+    { id:'tbd3', name:'？？？', stars:0, baseHp:0, effectText:'敬请期待', disabled:true, startAssets:[] }
+  ],
+  upgrades: [
+    { id:'u_hp', title:'加固心态', desc:'+1 基础血量（显示为更多红心）', cost:1, effect:{type:'hpBonus', value:1} },
+    { id:'u_cd', title:'多备一张存单', desc:'开局资产 +1 张小存单', cost:1, effect:{type:'startDeposit', value:1} },
+    { id:'u_money', title:'备用现金', desc:'开局资金 +2（上限仍为 25）', cost:1, effect:{type:'startMoney', value:2} }
+  ]
+};
+
 const LEVELS = [
   // round, opens, target(累计资金), cap(资金上限), storyTitle, story, stratPickCount, stratShowCount
   { round:1,  opens:3, target:30,  cap:60,  storyTitle:"第一轮 · 入职报到",    stratPick:1, stratShow:2,
@@ -4155,39 +4186,9 @@ if(_tText2) _tText2.textContent = getTarget();
 /* =========================
  *  Roles
  * ========================= */
-const ROLES = [
-  {
-    id:"rookie",
-    name:"炒股小白",
-    stars:1,
-    baseHp:5,
-    effectText:"无",
-    onStart:(state)=>{}
-  },
-  {
-    id:"middle",
-    name:"稳健中产",
-    stars:1,
-    baseHp:4,
-    effectText:"游戏开始时，资产里获得 3 张小存单。",
-    onStart:(state)=>{
-      // add 3 copies of 小存单 to assets
-      for(let i=0;i<3;i++){
-        const c = createCardByName("小存单");
-        if(c) assets.push(c);
-      }
-    }
-  },
-  { id:"tbd1", name:"？？？", stars:0, baseHp:0, effectText:"敬请期待", disabled:true },
-  { id:"tbd2", name:"？？？", stars:0, baseHp:0, effectText:"敬请期待", disabled:true },
-  { id:"tbd3", name:"？？？", stars:0, baseHp:0, effectText:"敬请期待", disabled:true }
-];
+const ROLES = GAME_BALANCE.roles.map(r=>({ ...r, startAssets: (r.startAssets || []).map(x=>({ ...x })) }));
 
-const UPGRADES = [
-  { id:"u_hp", title:"加固心态", desc:"+1 基础血量（显示为更多红心）", apply:(s)=>{ s.hpBonus += 1; } },
-  { id:"u_cd", title:"多备一张存单", desc:"开局资产 +1 张小存单", apply:(s)=>{ s.startDeposit += 1; } },
-  { id:"u_money", title:"备用现金", desc:"开局资金 +2（上限仍为 25）", apply:(s)=>{ s.startMoney += 2; } },
-];
+const UPGRADES = GAME_BALANCE.upgrades.map(u=>({ ...u }));
 
 let selectedRoleId = null;
 let selectedUpgradeId = null;
@@ -4195,7 +4196,7 @@ let playerHpMax = 3;
 let playerHp = 3;
 
 let metaPoints = 0;
-const CONFIG = { storyEnabled:true, storyId:'welcome' };
+const CONFIG = { storyEnabled:true, storyId:'welcome', starterAssetCount: GAME_BALANCE.starterAssetCount, rewardAssetChoiceCount: GAME_BALANCE.rewardAssetChoiceCount };
 let storyStep = 0;
 
 
@@ -4338,7 +4339,15 @@ function applyRoleToRun(){
   strategies.length = 0;
   Object.keys(cardNetEarnings).forEach(k => delete cardNetEarnings[k]);
 
-  if(role && role.onStart) role.onStart({});
+  if(role && Array.isArray(role.startAssets)){
+    role.startAssets.forEach((entry)=>{
+      const count = Math.max(0, Number(entry.count || 0));
+      for(let i=0;i<count;i++){
+        const c = createCardByName(entry.name);
+        if(c) assets.push(c);
+      }
+    });
+  }
   const uiRoleName = document.getElementById("uiRoleName");
   if(uiRoleName) uiRoleName.textContent = role ? role.name : "未选择";
 }
@@ -4399,11 +4408,12 @@ function startGameFromLobby(){
     good:true
   });
 
-  if(selectedRoleId === "middle"){
+  if(roleObj && Array.isArray(roleObj.startAssets) && roleObj.startAssets.length){
+    const desc = roleObj.startAssets.map(x=>`${x.name} × ${x.count}`).join('，');
     addHistoryItem({
-      natural:"🎁 开局获得 3 张<b>小存单</b>",
+      natural:`🎁 开局获得 <b>${escapeHtml(desc)}</b>`,
       title:"开局资产", delta:0,
-      detail:"稳健中产：已获得 3 张【小存单】加入资产卡。",
+      detail:`${escapeHtml(roleObj.name)}：已获得 ${escapeHtml(desc)} 加入资产卡。`,
       good:true
     });
   }
@@ -4418,11 +4428,7 @@ function startGameFromLobby(){
  * ========================= */
 (function initTicker(){
   const track = document.getElementById("tickerTrack");
-  const items = [
-    "沪A·量子科技  +3","深B·蓝海制药  -1","创业·极光AI  +2","港股·远航航运  -2",
-    "期权·波动率  +1","基金·底子是好的  +1","股票·潜力股  +3","工具·一次性内幕  0",
-    "人类·电诈专员  -1","指数·开盘撮合中…"
-  ];
+  const items = GAME_BALANCE.tickerItems;
   const s = items.concat(items).map(x=>`<span>${x}</span>`).join(" • ");
   track.innerHTML = s + " • " + s;
 })();
@@ -4435,8 +4441,9 @@ function startGameFromLobby(){
 // ════════════════════════════════════════════
 
 // 用 localStorage 持久化用户配置
-const CFG_KEY = 'lsc_level_config_v1';
-const CARD_CFG_KEY = 'lsc_card_config_v1';
+const CFG_KEY = GAME_BALANCE.cfgStorageKeys.level;
+const CARD_CFG_KEY = GAME_BALANCE.cfgStorageKeys.card;
+const GENERAL_CFG_KEY = GAME_BALANCE.cfgStorageKeys.general;
 
 // 读取存储的关卡配置（覆盖 LEVELS）
 function loadSavedLevelConfig(){
@@ -4449,6 +4456,29 @@ function loadSavedLevelConfig(){
         Object.assign(LEVELS[i], s);
       }
     });
+  } catch(e){}
+}
+
+
+function loadSavedGeneralConfig(){
+  try{
+    const raw = localStorage.getItem(GENERAL_CFG_KEY);
+    if(!raw) return;
+    const saved = JSON.parse(raw);
+    if(saved && typeof saved === 'object'){
+      if(Number.isFinite(Number(saved.starterAssetCount))){
+        CONFIG.starterAssetCount = clamp(parseInt(saved.starterAssetCount,10), 1, 10);
+      }
+      if(Number.isFinite(Number(saved.rewardAssetChoiceCount))){
+        CONFIG.rewardAssetChoiceCount = clamp(parseInt(saved.rewardAssetChoiceCount,10), 1, 6);
+      }
+      if(typeof saved.storyEnabled === 'boolean'){
+        CONFIG.storyEnabled = saved.storyEnabled;
+      }
+      if(typeof saved.storyId === 'string'){
+        CONFIG.storyId = saved.storyId;
+      }
+    }
   } catch(e){}
 }
 
@@ -4468,7 +4498,7 @@ function loadSavedCardConfig(){
 }
 
 // 立即应用已保存配置
-try{ loadSavedLevelConfig(); loadSavedCardConfig(); } catch(e){}
+try{ loadSavedLevelConfig(); loadSavedCardConfig(); loadSavedGeneralConfig(); } catch(e){}
 
 // ── Tab 切换 ──
 function cfgSwitchTab(name){
@@ -4565,8 +4595,12 @@ function goConfig(){
   // 同步通用设置
   const storyEl = document.getElementById('cfgStoryEnabled');
   const storySelEl = document.getElementById('cfgStorySelect');
+  const starterEl = document.getElementById('cfgStarterCount');
+  const rewardEl = document.getElementById('cfgRewardCount');
   if(storyEl) storyEl.checked = CONFIG.storyEnabled;
   if(storySelEl) storySelEl.value = CONFIG.storyId;
+  if(starterEl) starterEl.value = Number(CONFIG.starterAssetCount || GAME_BALANCE.starterAssetCount || 5);
+  if(rewardEl) rewardEl.value = Number(CONFIG.rewardAssetChoiceCount || GAME_BALANCE.rewardAssetChoiceCount || 3);
 
   // 渲染关卡和卡池面板
   cfgRenderLevels();
@@ -4585,8 +4619,11 @@ function saveConfig(){
   const storyEl = document.getElementById('cfgStoryEnabled');
   const storySelEl = document.getElementById('cfgStorySelect');
   const starterEl = document.getElementById('cfgStarterCount');
+  const rewardEl = document.getElementById('cfgRewardCount');
   if(storyEl) CONFIG.storyEnabled = storyEl.checked;
   if(storySelEl) CONFIG.storyId = storySelEl.value;
+  if(starterEl) CONFIG.starterAssetCount = clamp(parseInt(starterEl.value || GAME_BALANCE.starterAssetCount, 10), 1, 10);
+  if(rewardEl) CONFIG.rewardAssetChoiceCount = clamp(parseInt(rewardEl.value || GAME_BALANCE.rewardAssetChoiceCount, 10), 1, 6);
 
   // 保存关卡配置
   const levelSave = [];
@@ -4625,6 +4662,14 @@ function saveConfig(){
   });
   try{ localStorage.setItem(CARD_CFG_KEY, JSON.stringify(cardSave)); } catch(e){}
 
+  const generalSave = {
+    storyEnabled: CONFIG.storyEnabled,
+    storyId: CONFIG.storyId,
+    starterAssetCount: Number(CONFIG.starterAssetCount || GAME_BALANCE.starterAssetCount || 5),
+    rewardAssetChoiceCount: Number(CONFIG.rewardAssetChoiceCount || GAME_BALANCE.rewardAssetChoiceCount || 3)
+  };
+  try{ localStorage.setItem(GENERAL_CFG_KEY, JSON.stringify(generalSave)); } catch(e){}
+
   // 通知保存成功
   const btn = document.querySelector('.cfgFooter .menuBtn.primary');
   if(btn){ const orig = btn.textContent; btn.textContent = '✅ 已保存！'; setTimeout(()=>{ btn.textContent = orig; }, 1500); }
@@ -4633,7 +4678,7 @@ function saveConfig(){
 
 function cfgResetAll(){
   if(!confirm('确定重置所有配置为默认值吗？')) return;
-  try{ localStorage.removeItem(CFG_KEY); localStorage.removeItem(CARD_CFG_KEY); } catch(e){}
+  try{ localStorage.removeItem(CFG_KEY); localStorage.removeItem(CARD_CFG_KEY); localStorage.removeItem(GENERAL_CFG_KEY); } catch(e){}
   location.reload();
 }
 
@@ -4845,7 +4890,7 @@ function hideTooltip(){ tooltip.style.display = "none"; tooltip.innerHTML=""; }
  * ========================= */
 function renderTop(){
   const lvl = getLvl();
-  roundNoEl.textContent = lvl.round + ' / 12';
+  roundNoEl.textContent = `${lvl.round} / ${LEVELS.length}`;
   moneyEl.textContent = money;
   money2El.textContent = money;
   openCountEl.textContent = openCount;
@@ -5122,7 +5167,7 @@ function showStarterPack(){
 
   // 生成 5 张随机★资产卡（实例化新卡）
   const starterPool = shuffle(assetLib().filter(c=>c.rarity===1));
-  const starterCount = 5;
+  const starterCount = Number(CONFIG.starterAssetCount || GAME_BALANCE.starterAssetCount || 5);
   const opts = starterPool.slice(0, Math.min(starterCount, starterPool.length)).map(c => ({
     ...c,
     keywords: c.keywords ? c.keywords.map(k=>({...k})) : [],
@@ -5169,7 +5214,7 @@ function endRun(win){
   const roundsCompleted = currentLevel + (win ? 1 : 0);
   const title = win ? "🍀 幸运传奇！最终交付成功！" : (currentLevel >= LEVELS.length-1 ? "😢 最终关卡失败" : `❌ 第 ${lvl.round} 轮交付失败`);
   const sub = win
-    ? `完成全部 12 轮，累计资金 ${money}，达成传奇 777！`
+    ? `完成全部 ${LEVELS.length} 轮，累计资金 ${money}，达成传奇 777！`
     : (playerHp <= 0 ? "体力耗尽，被老板强制下岗。" : `累计资金 ${money} 未达目标 ${lvl.target}，被老板开除。`);
 
   if(endTitleEl) endTitleEl.textContent = title;
@@ -5178,7 +5223,7 @@ function endRun(win){
   const detail = `
     <div class="hFont" style="font-size:18px;margin-bottom:8px;">${title}</div>
     <div style="opacity:0.92;">
-      完成轮次：<b>${roundsCompleted} / 12</b> ｜
+      完成轮次：<b>${roundsCompleted} / ${LEVELS.length}</b> ｜
       当前资金：<b>${money}</b> ｜
       本轮目标：<b>${lvl.target}</b>
     </div>
@@ -5538,7 +5583,8 @@ function showReward(){
       };
     }
 
-    const opts = shuffle(assetLib()).slice(0,3).map(c => ({...c, id: c.id + "_r" + Date.now()}));
+    const rewardCount = Number(CONFIG.rewardAssetChoiceCount || GAME_BALANCE.rewardAssetChoiceCount || 3);
+    const opts = shuffle(assetLib()).slice(0,rewardCount).map(c => ({...c, id: c.id + "_r" + Date.now()}));
 
     opts.forEach((c)=>{
       const cardEl = buildHsCard(c);
@@ -5818,10 +5864,10 @@ function showRoundStartStory(){
     const slideEl = document.getElementById('roundStorySlide');
     const btnEl = document.getElementById('btnRoundStoryOk');
     if(titleEl) titleEl.textContent = lvl.storyTitle;
-    if(subEl) subEl.textContent = `第 ${lvl.round} / 12 轮`;
+    if(subEl) subEl.textContent = `第 ${lvl.round} / ${LEVELS.length} 轮`;
     if(badgeEl) badgeEl.textContent = `本轮开盘 ${lvl.opens} 次`;
     if(slideEl) slideEl.innerHTML = lvl.story;
-    if(btnEl) btnEl.textContent = lvl.round === 12 ? '⚔️ 最终决战' : '开始开盘';
+    if(btnEl) btnEl.textContent = lvl.round === LEVELS.length ? '⚔️ 最终决战' : '开始开盘';
     const overlay = document.getElementById('roundStoryOverlay');
     if(overlay) overlay.style.display = 'flex';
   });
@@ -5849,7 +5895,7 @@ function showRoundEndOverlay(win){
 
   if(titleEl) titleEl.textContent = `第 ${lvl.round} 轮 · 交付结算`;
   if(subEl) subEl.textContent = win ? '✅ 交付成功！' : '❌ 交付失败';
-  if(badgeEl) badgeEl.textContent = `第 ${lvl.round} / 12 轮`;
+  if(badgeEl) badgeEl.textContent = `第 ${lvl.round} / ${LEVELS.length} 轮`;
 
   const nextLvl = LEVELS[currentLevel + 1];
   const stratInfo = lvl.stratPick > 0
