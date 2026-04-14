@@ -1,13 +1,15 @@
-# 幸运炒股公司（Lucky Stock Company）
+# 幸运炒股机（Lucky Stock Machine）
 
-在线游玩：
-- https://cdn.jsdelivr.net/gh/WEIZHIHANG1120/-lucky-@main/index.html
+## 在线游玩
 
-一个轻策略卡牌式股票模拟网页原型，围绕「开盘 -> 增持 -> 交付 -> 强化」形成单局循环。
+- [点击游玩（推荐）](https://raw.githack.com/WEIZHIHANG1120/-lucky-/main/index.html)
+- [备用链接（jsDelivr）](https://cdn.jsdelivr.net/gh/WEIZHIHANG1120/-lucky-@main/index.html)
+
+如果打开后看到的是源码，请不要使用 `github.com/.../blob/.../index.html` 这类文件页链接，改用上面两个“在线游玩”链接。
 
 ## 项目简介
 
-`幸运炒股机` 是一个偏玩法验证的前端原型项目，目标是用更直观的卡牌机制表达股票涨跌、风险分散和资金池策略。
+一个轻策略卡牌式股票模拟网页原型，围绕「开盘 -> 增持 -> 交付 -> 强化」形成单局循环。
 
 ## 核心玩法
 
