@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎰 幸运炒股机 Lucky Stock Machine
+# 🎰 幸运炒股公司MVP Lucky Stock Company
 
 <p>
   <img alt="version" src="https://img.shields.io/badge/version-4.0-red?style=for-the-badge">
