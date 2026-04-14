@@ -1,0 +1,567 @@
+﻿<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>幸运炒股机 - 4.0 原型版</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="./styles/main.css?v=4.0.13" />
+  <link rel="stylesheet" href="./styles/config.css?v=4.0.13" />
+  <link rel="stylesheet" href="./styles/fix38.css?v=4.0.13" />
+</head>
+
+<body>
+
+
+<!-- MENU PAGE -->
+<div id="menuPage" class="menuPage">
+  <div class="menuFX"></div>
+
+  <div class="menuPanel">
+    <div class="menuInner">
+      <div class="gameTitle hFont">幸运炒股机</div>
+      <div class="menuSub">
+        12 轮关卡，最终交易额达到1000。<br/>
+        固定 3 行资金池，股票位置不会乱跑；开盘按当前位置结算，清空腾位后再做组合。      </div>
+
+      <div class="menuCards" aria-hidden="true">
+        <div class="miniCard"><div class="miniArt"></div><div class="miniName"></div></div>
+        <div class="miniCard"><div class="miniArt"></div><div class="miniName"></div></div>
+        <div class="miniCard"><div class="miniArt"></div><div class="miniName"></div></div>
+      </div>
+
+      <div class="menuBtns">
+        <button class="menuBtn primary hFont" onclick="goRoleSelect()">开始</button>
+        <button id="bgmBtn" class="menuBtn hFont" onclick="toggleBGM()" style="height:44px;border-radius:14px;font-size:18px;">🎵 背景音乐</button>
+        <button id="tutorialToggleBtn" class="menuBtn hFont" onclick="toggleTutorialSetting()" style="height:44px;border-radius:14px;font-size:18px;"></button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ticker">
+    <div class="tickerTrack" id="tickerTrack"></div>
+  </div>
+</div>
+
+
+
+<!-- CONFIG PAGE - 完整卡池+卡牌配置 -->
+<div id="configPage" class="rolePage" style="display:none;overflow-y:auto;">
+
+
+<div class="cfgWrap">
+  <div class="cfgTitle hFont">🎛️ 游戏配置</div>
+  <div class="cfgSub">修改每局开局次数、交易目标、强化标记数量、手动执行，以及资产卡数值、音效、游戏音效映射和卡面资源。</div>
+
+  <!-- Tab 切换 -->
+  <div class="cfgTabs">
+    <div class="cfgTab active" onclick="cfgSwitchTab('rounds')">🎯 关卡配置（12轮）</div>
+    <div class="cfgTab" onclick="cfgSwitchTab('cards')">🃏 卡池数值配置</div>
+    <div class="cfgTab" onclick="cfgSwitchTab('assets')">🎨 音效美术配置</div>
+  </div>
+
+  <!-- TAB: 关卡配置 -->
+  <div id="cfgTab_rounds" class="cfgTabPanel active">
+    <div class="lvlCard">
+      <div class="cfgSectionTitle">全局发牌设置</div>
+      <div class="cfgRow">
+        <div class="cfgField">
+          <label class="cfgLabel">初始发放资产卡数量</label>
+          <input id="cfgStarterCount" type="number" min="1" max="10" value="5" class="cfgInput"/>
+        </div>
+        <div class="cfgField">
+          <label class="cfgLabel">每次开盘后的增加权选数量</label>
+          <input id="cfgRewardCount" type="number" min="1" max="6" value="3" class="cfgInput"/>
+        </div>
+      </div>
+    </div>
+    <div class="lvlCard">
+      <div class="cfgSectionTitle">关卡曲线预览</div>
+      <div class="cfgSubtle">可保留每轮的开盘次数、交付目标和对应文案，方便快速扫一眼节奏。</div>
+      <div id="cfgCurvePreview" class="curvePreview"></div>
+    </div>
+    <div class="lvlCard">
+      <div class="cfgSectionTitle">关卡配置表</div>
+      <div class="cfgSubtle">像 Excel 一样在一张表里改完整 12 轮的数值和文案。标题格式固定为"第X轮· 标题后缀"，正文固定三行纯文本。第 4 轮开始会从游戏音效池随机播放，不再逐轮配置 BGM。</div>
+      <div style="overflow-x:auto;">
+        <table class="cardTable" id="cfgLevelTable">
+          <thead>
+            <tr>
+              <th>轮次</th>
+              <th>开盘次数</th>
+              <th>交付目标</th>
+              <th>可选策略</th>
+              <th>展示策略</th>
+              <th>标题后缀</th>
+              <th>第一行</th>
+              <th>第二行</th>
+            </tr>
+          </thead>
+          <tbody id="cfgLevelsTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: 卡池数值配置 -->
+  <div id="cfgTab_cards" class="cfgTabPanel">
+    <div style="font-size:13px;opacity:0.6;margin-bottom:12px;">
+      只展示 8 类股票卡。可直接按类查并修改每张卡面的上涨/下跌基础值，强化词条会在开盘时额外结算。    </div>
+    <div class="lvlCard">
+      <div class="cfgToolbar">
+        <div id="cfgCardCategoryRow" class="cfgChipRow"></div>
+        <input id="cfgCardSearch" class="cfgInput cfgSearchInput" type="text" placeholder="搜索卡名或类别" oninput="cfgHandleCardSearch(this.value)"/>
+      </div>
+      <div class="cfgSubtle">当前显示：<span id="cfgCardStats">0 / 0</span></div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="cardTable" id="cfgCardTable">
+        <thead>
+          <tr>
+            <th>卡名</th><th>稀有度</th><th>类别</th>
+            <th>上涨值</th><th>下跌值</th><th>效果简述</th>
+          </tr>
+        </thead>
+        <tbody id="cfgCardTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div id="cfgTab_assets" class="cfgTabPanel">
+    <div class="lvlCard">
+      <div class="cfgSectionTitle">音效资源配置</div>
+      <div class="cfgSubtle">留空时继续使用内置音效；填写后会直接对应 MP3 / WAV / OGG 文件。</div>
+      <div style="overflow-x:auto;">
+        <table class="cardTable">
+          <thead>
+            <tr>
+              <th>资源项</th>
+              <th>音频路径</th>
+              <th>用途说明</th>
+            </tr>
+          </thead>
+          <tbody id="cfgAudioTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="lvlCard">
+      <div class="cfgSectionTitle">游戏音乐映射</div>
+      <div class="cfgSubtle">这里只保留映射和文件头占位。第 1-3 轮不播游戏音效，第 4 轮开始每轮随机 1 首</div>
+      <div style="overflow-x:auto;">
+        <table class="cardTable">
+          <thead>
+            <tr>
+              <th>资源项</th>
+              <th>音频路径</th>
+              <th>用途说明</th>
+            </tr>
+          </thead>
+          <tbody id="cfgMusicTbody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="lvlCard">
+      <div class="cfgSectionTitle">美术资源配置</div>
+      <div class="cfgSubtle">资产卡和强化标记统一在这里配置；目前只支持图片路径和填充色，后续直接替换图片即可。</div>
+      <div style="overflow-x:auto;">
+        <table class="cardTable">
+          <thead>
+            <tr>
+              <th>资源项</th>
+              <th>图片路径</th>
+              <th>主色</th>
+              <th>描边色</th>
+              <th>用途说明</th>
+            </tr>
+          </thead>
+          <tbody id="cfgVisualTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 固定底部操作栏 -->
+<div class="cfgFooter">
+  <button class="menuBtn hFont" style="height:44px;border-radius:12px;min-width:100px;" onclick="leaveConfigPage()">← 返回</button>
+  <button class="menuBtn hFont" style="height:44px;border-radius:12px;min-width:100px;" onclick="cfgResetAll()">🧹 重置默认</button>
+  <button class="menuBtn primary hFont" style="height:44px;border-radius:12px;min-width:120px;" onclick="saveConfig()">💾 保存配置</button>
+</div>
+</div>
+
+<!-- STORY (PPT) OVERLAY -->
+<div id="storyOverlay" class="rewardOverlay" style="display:none;">
+  <div class="rewardPanel" style="max-width:860px;">
+    <div class="rewardHeader">
+      <div>
+        <div class="h hFont" id="storyTitle">剧情</div>
+        <div class="s" id="storySub">点击继续</div>
+      </div>
+      <div class="s">PPT</div>
+    </div>
+    <div style="padding:18px;">
+      <div id="storySlide" style="
+        border-radius:18px;
+        border:1px solid rgba(255,255,255,0.14);
+        background:rgba(0,0,0,0.22);
+        padding:22px 18px;
+        min-height:220px;
+        box-shadow:0 16px 55px rgba(0,0,0,0.45);
+      "></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;margin-top:14px;">
+        <button id="storyBtnBack" class="ghostBtn hFont" style="width:120px;" onclick="storyPrev()" disabled>上一页</button>
+        <button id="storyBtnNext" class="menuBtn primary hFont" style="height:46px;border-radius:16px;width:160px;" onclick="storyNext()">下一页</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ROLE SELECT PAGE -->
+<div id="rolePage" class="rolePage" style="display:none;">
+  <div class="rolePanel">
+    <div class="roleHeader">
+      <div class="hFont" style="font-size:18px;">选择角色</div>
+    </div>
+
+    <div class="roleGrid" id="roleGrid"></div>
+
+    <div class="roleFooter">
+      <button class="menuBtn hFont" style="height:46px;border-radius:16px;" onclick="backToMenu()">返回</button>
+      <button id="btnRoleNext" class="menuBtn primary hFont" style="height:46px;border-radius:16px;" onclick="goRoleLobby()" disabled>确认</button>
+    </div>
+    </div>
+</div>
+
+
+<!-- ROLE LOBBY PAGE -->
+<div id="roleLobbyPage" class="rolePage" style="display:none;">
+  <div class="rolePanel">
+    <div class="roleHeader">
+      <div>
+        <div class="hFont" style="font-size:18px;">角色豪华</div>
+      </div>
+    </div>
+
+    <div class="upgradeHint small" style="padding-top:14px;">
+      <div class="hFont" id="lobbyRoleName" style="font-size:20px;margin-bottom:6px;"></div>
+      <div id="lobbyRoleDesc" style="line-height:1.55;color:rgba(255,255,255,0.78);"></div>
+
+    </div>
+
+    <div class="roleFooter">
+      <button class="menuBtn hFont" style="height:46px;border-radius:16px;" onclick="goRoleSelect(true)">更换角色</button>
+      <button id="btnLobbyStart" class="menuBtn primary hFont" style="height:46px;border-radius:16px;width:160px;" onclick="startGameFromLobby()">开始</button>
+    </div>
+    </div>
+</div>
+
+<!-- GAME PAGE -->
+
+<div id="gamePage" class="gamePage">
+  <div class="gameContainer">
+    <!-- LEFT -->
+    <div class="panel legacyAssetPanel" aria-hidden="true">
+      <div class="panelHeader">
+        <div>
+          <div class="panelTitle hFont artPanelTitle">我的资产</div>
+        </div>
+        <span id="roundNo" style="display:none">1</span>
+        <span id="money" style="display:none">0</span>
+      </div>
+
+      <div class="leftBody">
+        <div class="leftStockActionRow">
+          <button class="cleanupBtn hFont passive" type="button">查看资产</button>
+          <div class="leftStockCount"><span id="assetCount">0</span> 张</div>
+        </div>
+        <div class="gridWrap leftStockGridWrap">
+          <div id="assetEmpty" class="emptyHint">
+            开盘后获得 1 次增持机会
+          </div>
+          <div id="assetGrid" class="stockCardGrid" style="display:none;"></div>
+        </div>
+        <div class="cleanupDock" id="cleanupDock">
+          <button id="cleanupToggleBtn" class="cleanupBtn hFont" onclick="toggleCleanupMode()">清结</button>
+          <div class="cleanupInfo">
+            <div id="cleanupStatus" class="cleanupStatus" style="display:none;"></div>
+            <div class="cleanupActions" id="cleanupActions" style="display:none;">
+              <button id="cleanupConfirmBtn" class="ghostBtn hFont" onclick="confirmCleanupSelection()" disabled>确认</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="panel centerStage">
+      <div class="panelHeader">
+        <div class="centerHeaderLeft">
+          <div class="panelTitle hFont artPanelTitle hallTitle">交易大厅</div>
+        </div>
+        <button id="otherSettingsBtn" class="ghostBtn hFont settingsBtn" style="display:none;" onclick="toggleSettingsDrawer()">其他设置</button>
+        <!-- hidden compat elements -->
+        <span id="targetText" style="display:none">25</span>
+        <span id="targetText2" style="display:none">25</span>
+        <span id="openCount" style="display:none">0</span>
+        <span id="deliveryLeft" style="display:none">9</span>
+        <span id="deliveryLeft2" style="display:none">9</span>
+        <span id="deliveryState" style="display:none">未交收</span>
+      </div>
+
+      <div class="centerBody">
+        <!-- 集成状态面板：进度条 + 关键数字 -->
+        <div class="statusPanel">
+          <!-- 目标金额提示 -->
+          <div class="goalHint">
+            <span class="goalHintText">本轮目标</span>
+            <span class="goalHintValue">资金足够 <span class="goalHintNum" id="goalHintNum">25</span></span>
+          </div>
+          <!-- 行：开盘进度 -->
+          <div class="dualProgressRow" id="openProgressRow">
+            <div class="dualLabel">
+              <span class="dualLabelText openRowLabel">开盘</span>
+              <span class="dualLabelNum">
+                <span id="openCountDisp" class="numHighlight numBlue291">0</span>
+                <span class="dualLabelSub numSubBig numBlue291">/9</span>
+              </span>
+            </div>
+            <div class="dualBarOuter" id="deliveryBar">
+              <div class="dualBarInner dualBarOpen" id="deliveryInner"></div>
+              <div class="dualBarGlow" id="openBarGlow"></div>
+            </div>
+          </div>
+          <!-- 行：资金进度 -->
+          <div class="dualProgressRow" id="moneyProgressRow">
+            <div class="dualLabel">
+              <span class="dualLabelText moneyRowLabel">资金</span>
+              <span class="dualLabelNum">
+                <span id="money2" class="numHighlight numYellow291">0</span>
+                <span class="dualLabelSub numSubBig numYellow291">/25</span>
+              </span>
+            </div>
+            <div class="dualBarOuter progressOuter" id="progressOuter">
+              <div class="dualBarInner dualBarMoney progressInner" id="progressInner"></div>
+              <div class="dualBarGlow" id="moneyBarGlow"></div>
+            </div>
+          </div>
+        </div>
+        <!-- hidden compat: targetDisp still needed by JS renderTop -->
+        <span id="targetDisp" style="display:none">25</span>
+
+        <div class="hallActionBar">
+          <button id="btnOpen" class="bigOpenBtn hFont" onclick="startOpen()">开盘</button>
+          <button id="hallCleanupBtn" class="ghostBtn hFont hallCleanupBtn" onclick="toggleCleanupMode()">清仓模式</button>
+        </div>
+
+        <div id="placementHint" class="placementHint" style="display:none;"></div>
+
+        <div class="historyDock">
+          <div class="historyDockHead">
+            <span>最近动态</span>
+            <span class="historyDockSub">只保留最近 4 条</span>
+          </div>
+          <div id="historyList" class="historyRail"></div>
+        </div>
+
+        <div class="revealWrap">
+          <div id="revealGrid" class="revealGrid"></div>
+        </div>
+      </div>
+    </div>
+  
+  </div>
+</div>
+
+<!-- STARTER (开局发放) -->
+<div id="starterOverlay" class="rewardOverlay" style="display:none;">
+  <div class="rewardPanel" style="max-width:860px;">
+    <div class="rewardHeader">
+      <div>
+        <div class="h hFont">开局发放：随机 3 张 💎 资产卡</div>
+        <div class="s">点击"好的"后，才会开始第一次开盘</div>
+      </div>
+      <div class="s">开局奖励</div>
+    </div>
+      <div style="padding:16px;">
+        <div class="rewardGrid" id="starterGrid"></div>
+        <div style="display:flex;justify-content:center;margin-top:14px;">
+          <button id="btnStarterOk" class="menuBtn primary hFont" style="height:52px;border-radius:16px;width:min(280px,100%);">领取并开始</button>
+        </div>
+      </div>
+  </div>
+</div>
+
+<!-- END (结算) -->
+<div id="endOverlay" class="rewardOverlay" style="display:none;">
+  <div class="rewardPanel" style="max-width:760px;">
+    <div class="rewardHeader">
+      <div>
+        <div class="h hFont" id="endTitle">结算</div>
+        <div class="s" id="endSub">—</div>
+      </div>
+      <div class="s">交付结果</div>
+    </div>
+    <div style="padding:18px;">
+      <div id="endBody" style="
+        border-radius:18px;
+        border:1px solid rgba(255,255,255,0.14);
+        background:rgba(0,0,0,0.22);
+        padding:18px 16px;
+        line-height:1.7;
+        color:rgba(255,255,255,0.82);
+      "></div>
+      <div style="display:flex;justify-content:space-between;gap:12px;margin-top:14px;">
+        <button class="ghostBtn hFont" style="width:140px;" onclick="backToMenu()">返回主菜单</button>
+        <button class="menuBtn primary hFont" style="height:46px;border-radius:16px;width:160px;" onclick="restartSameRole()">再来一局</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+
+<div class="tooltip" id="tooltip"></div>
+
+<!-- Mix -->
+<div class="mixPile" id="mixPile"><div class="mixText hFont">撮合中…</div></div>
+
+<!-- Reward -->
+<div class="rewardOverlay" id="rewardOverlay" style="display:none;">
+  <div class="rewardPanel">
+    <div class="rewardHeader rewardHeader293">
+      <div class="rewardHeaderTitle hFont">增持机会</div>
+      <div class="rewardInfoRows" id="rewardInfoRows">
+        <div class="rewardInfoRow rewardInfoRow--open" id="rewardInfoOpen">
+          <span class="rewardInfoIcon">📊</span>
+          <span class="rewardInfoLabel">开盘置次</span>
+          <span class="rewardInfoVal" id="rewardOpenVal">—</span>
+        </div>
+        <div class="rewardInfoRow rewardInfoRow--money" id="rewardInfoMoney">
+          <span class="rewardInfoIcon">💰</span>
+          <span class="rewardInfoLabel">本次净收益</span>
+          <span class="rewardInfoVal" id="rewardNetVal">—</span>
+        </div>
+      </div>
+    </div>
+    <div class="rewardGrid" id="rewardGrid"></div>
+    <div class="rewardFooter">
+      <button id="btnRewardSkip" class="ghostBtn hFont" style="height:36px;padding:0 24px;opacity:0.75;">放弃本次增持</button>
+    </div>
+  </div>
+</div>
+
+<script src="./scripts/config.js?v=4.0.13" defer></script>
+<script src="./scripts/app.js?v=4.0.13" defer></script>
+
+<!-- ROUND STORY OVERLAY (每轮开始执行) -->
+<div id="roundStoryOverlay" class="rewardOverlay" style="display:none;">
+  <div class="rewardPanel" style="max-width:860px;">
+    <div class="rewardHeader">
+      <div>
+        <div class="h hFont" id="roundStoryTitle">第 1 轮</div>
+        <div class="s" id="roundStorySub">剧情</div>
+      </div>
+      <div class="s" id="roundStoryBadge">轮次开始</div>
+    </div>
+    <div style="padding:18px;">
+      <div id="roundStorySlide" style="
+        border-radius:18px;
+        border:1px solid rgba(255,255,255,0.14);
+        background:rgba(0,0,0,0.22);
+        padding:22px 18px;
+        min-height:220px;
+        box-shadow:0 16px 55px rgba(0,0,0,0.45);
+        line-height:1.7;
+        color:rgba(255,255,255,0.84);
+      "></div>
+      <div style="display:flex;justify-content:flex-end;margin-top:14px;">
+        <button id="btnRoundStoryOk" class="menuBtn primary hFont" style="height:46px;border-radius:16px;width:160px;" onclick="closeRoundStory()">继续</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ROUND END / DELIVERY OVERLAY (每轮结束交付) -->
+<div id="roundEndOverlay" class="rewardOverlay" style="display:none;">
+  <div class="rewardPanel" style="max-width:860px;">
+    <div class="rewardHeader">
+      <div>
+        <div class="h hFont" id="roundEndTitle">轮次结算</div>
+        <div class="s" id="roundEndSub">—</div>
+      </div>
+      <div class="s" id="roundEndBadge">交付结果</div>
+    </div>
+    <div style="padding:18px;">
+      <div id="roundEndBody" style="
+        border-radius:18px;
+        border:1px solid rgba(255,255,255,0.14);
+        background:rgba(0,0,0,0.22);
+        padding:18px 16px;
+        line-height:1.8;
+        color:rgba(255,255,255,0.82);
+        margin-bottom:14px;
+      "></div>
+      <div id="roundEndContinueArea" style="display:flex;justify-content:flex-end;">
+        <button id="btnRoundEndOk" class="menuBtn primary hFont" style="height:46px;border-radius:16px;width:200px;" onclick="onRoundEndOk()">继续</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REINFORCE REWARD OVERLAY -->
+<div id="reinforceRewardOverlay" class="rewardOverlay" style="display:none;">
+  <div class="rewardPanel" style="max-width:980px;">
+    <div class="rewardHeader">
+      <div>
+        <div class="h hFont" id="reinforceRewardTitle">强化标记奖励</div>
+        <div class="s" id="reinforceRewardSub">选择强化标记</div>
+      </div>
+      <div class="s" id="reinforcePickInfo">剩余选择：<span id="reinforcePickLeft">1</span></div>
+    </div>
+    <div id="reinforceRewardGrid" class="rewardGrid" style="padding:16px;"></div>
+    <div id="reinforceEmbedInline" class="reinforceEmbedInline" style="display:none;">
+      <div class="reinforceInlineHead">
+        <div class="h hFont" id="reinforceEmbedTitle">强化股票卡中</div>
+        <div class="s" id="reinforceEmbedSub">请点击左侧股票缩略图选择目标</div>
+      </div>
+      <div class="reinforceEmbedBody">
+        <div id="reinforceEmbedSelected" class="cfgSubtle">当前未选中股票</div>
+        <div class="reinforceEmbedActions">
+          <button id="btnReinforcePeekToggle" class="ghostBtn hFont" onclick="toggleReinforcePeekMode()">查看盘面</button>
+          <button id="btnReinforceEmbedCancel" class="ghostBtn hFont" onclick="cancelReinforceEmbed()">取消</button>
+          <button id="btnReinforceEmbedConfirm" class="menuBtn primary hFont" onclick="confirmReinforceEmbed()" disabled>确认强化</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:space-between;padding:0 16px 16px 16px;gap:12px;">
+      <button id="btnReinforceSkip" class="ghostBtn hFont" style="height:36px;padding:0 24px;opacity:0.75;" onclick="skipReinforceReward()">跳过强化奖励</button>
+    </div>
+  </div>
+</div>
+
+<div id="ruleTriggerLayer" class="ruleTriggerLayer" aria-live="polite"></div>
+
+<!-- 📚 📚 📚 新手教程引导系统 📚 📚 📚 -->
+<div id="tutorialOverlay" class="tutorial-overlay" style="display:none;">
+  <div class="tutorial-backdrop"></div>
+  <div class="tutorial-highlight" id="tutorialHighlight"></div>
+  <div class="tutorial-bubble" id="tutorialBubble">
+    <div class="tutorial-bubble-title hFont" id="tutorialTitle">提示</div>
+    <div class="tutorial-bubble-body" id="tutorialBody">内容</div>
+    <div class="tutorial-bubble-footer">
+      <label class="tutorial-skip-label">
+        <input type="checkbox" id="tutorialDontShowAgain" /> 不再提示
+      </label>
+      <div class="tutorial-bubble-actions">
+        <button class="ghostBtn hFont" id="tutorialBtnSkip" style="height:34px;padding:0 18px;">跳过</button>
+        <button class="menuBtn primary hFont" id="tutorialBtnNext" style="height:38px;border-radius:12px;min-width:100px;">下一步</button>
+      </div>
+    </div>
+    <div class="tutorial-step-dots" id="tutorialStepDots"></div>
+  </div>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,89 @@
+/* ── 配置面板专用样式 ── */
+.cfgWrap { max-width:900px; margin:0 auto; padding:20px 16px 80px; }
+.cfgTitle { font-size:22px; font-weight:700; color:#63d6ff; margin-bottom:4px; }
+.cfgSub   { font-size:13px; opacity:0.6; margin-bottom:20px; }
+.cfgTabs  { display:flex; gap:8px; margin-bottom:18px; flex-wrap:wrap; }
+.cfgTab   { padding:8px 20px; border-radius:10px; border:1.5px solid rgba(255,255,255,0.15);
+            background:rgba(255,255,255,0.06); color:#ccc; cursor:pointer; font-size:14px;
+            transition:all .15s; }
+.cfgTab.active { border-color:#63d6ff; color:#63d6ff; background:rgba(99,214,255,0.12); }
+.cfgTabPanel { display:none; }
+.cfgTabPanel.active { display:block; }
+
+/* 关卡卡片 */
+.lvlCard { background:rgba(255,255,255,0.05); border:1.5px solid rgba(255,255,255,0.1);
+           border-radius:14px; padding:16px; margin-bottom:14px; }
+.lvlCardHead { display:flex; align-items:center; gap:12px; margin-bottom:12px; cursor:pointer; }
+.lvlBadge { background:#1a3a5c; color:#63d6ff; border-radius:8px; padding:4px 10px;
+            font-size:13px; font-weight:600; white-space:nowrap; }
+.lvlName  { font-size:15px; font-weight:600; flex:1; color:#e8e8e8; }
+.lvlToggle { opacity:0.5; font-size:18px; transition:.2s; }
+.lvlBody  { display:none; }
+.lvlBody.open { display:block; }
+
+.cfgRow { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:10px; margin-bottom:10px; }
+.cfgField { display:flex; flex-direction:column; gap:4px; }
+.cfgLabel { font-size:12px; opacity:0.65; }
+.cfgInput { background:rgba(255,255,255,0.08); border:1.5px solid rgba(255,255,255,0.12);
+            border-radius:8px; color:#fff; padding:6px 10px; font-size:14px; width:100%; box-sizing:border-box; }
+.cfgInput:focus { border-color:#63d6ff; outline:none; background:rgba(99,214,255,0.08); }
+.cfgTextarea { background:rgba(255,255,255,0.08); border:1.5px solid rgba(255,255,255,0.12);
+               border-radius:8px; color:#fff; padding:8px 10px; font-size:13px;
+               width:100%; box-sizing:border-box; min-height:80px; resize:vertical; line-height:1.5; }
+.cfgTextarea:focus { border-color:#63d6ff; outline:none; }
+.cfgSectionTitle { font-size:15px; font-weight:600; margin-bottom:10px; color:#e8e8e8; }
+.cfgSubtle { font-size:12px; opacity:0.68; line-height:1.5; margin-bottom:12px; }
+.cfgToolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-top:10px; }
+.cfgChipRow { display:flex; gap:8px; flex-wrap:wrap; }
+.cfgChip { padding:7px 12px; border-radius:999px; border:1px solid rgba(255,255,255,0.12); background:rgba(255,255,255,0.05); color:#ddd; cursor:pointer; }
+.cfgChip.active { border-color:#63d6ff; color:#63d6ff; background:rgba(99,214,255,0.12); }
+.cfgChip.cfgChipStock { min-width:72px; text-align:center; font-weight:700; }
+.cfgSearchInput { max-width:280px; }
+
+.curvePreview { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:10px; }
+.curveMiniCard { border-radius:12px; padding:12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08); }
+.curveMiniHead { display:flex; justify-content:space-between; gap:10px; font-size:12px; margin-bottom:8px; color:#dfe7ef; }
+.curveMetric { margin-bottom:8px; }
+.curveMetricTop { display:flex; justify-content:space-between; gap:10px; font-size:12px; opacity:0.88; margin-bottom:2px; }
+.curveOpenVal { color:#63d6ff; font-weight:700; }
+.curveTargetVal { color:#ffc857; font-weight:700; }
+.curveStoryText { font-size:12px; line-height:1.5; color:rgba(255,255,255,0.70); }
+
+/* 卡池表格 */
+.cardTable { width:100%; border-collapse:collapse; font-size:13px; }
+.cardTable th { background:rgba(99,214,255,0.1); color:#63d6ff; padding:8px 10px; text-align:left;
+                border-bottom:1.5px solid rgba(99,214,255,0.2); position:sticky; top:0; }
+.cardTable td { padding:7px 10px; border-bottom:1px solid rgba(255,255,255,0.05); vertical-align:middle; }
+.cardTable tr:hover td { background:rgba(255,255,255,0.03); }
+.cardNumInput { width:60px; background:rgba(255,255,255,0.08); border:1.5px solid rgba(255,255,255,0.12);
+                border-radius:6px; color:#fff; padding:4px 6px; font-size:13px; text-align:center; }
+.cardNumInput:focus { border-color:#63d6ff; outline:none; }
+.cfgTableInput { width:100%; min-width:84px; }
+.cfgTableTextarea { min-width:260px; min-height:88px; }
+.rarityDot1 { color:#aaa; } .rarityDot2 { color:#63d6ff; } .rarityDot3 { color:#fbbf24; }
+.catPill2 { padding:2px 7px; border-radius:5px; font-size:11px; background:rgba(99,214,255,0.15); color:#63d6ff; }
+.cardGroupRow td {
+  padding:10px 10px;
+  font-size:12px;
+  letter-spacing:0.08em;
+  color:#9fdfff;
+  background:rgba(18,34,52,0.94);
+  border-top:1px solid rgba(99,214,255,0.12);
+  border-bottom:1px solid rgba(99,214,255,0.12);
+}
+
+/* 底部操作栏 */
+.cfgFooter { position:fixed; bottom:0; left:0; right:0; background:rgba(10,15,30,0.96);
+             border-top:1.5px solid rgba(99,214,255,0.2); padding:12px 20px;
+             display:flex; gap:12px; justify-content:flex-end; z-index:200; }
+
+@media (max-width: 720px) {
+  .cfgSearchInput { max-width:none; width:100%; }
+  .cfgFooter { padding:12px; }
+}
+
+.cfgTinyKey { margin-top:4px; font-size:11px; color:rgba(255,255,255,0.42); }
+.cfgWideInput { min-width:240px; }
+.cfgColorInput { min-width:96px; text-transform:uppercase; }
+.cfgMutedCell { min-width:220px; font-size:12px; color:rgba(255,255,255,0.62); line-height:1.5; }
+
