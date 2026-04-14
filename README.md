@@ -1,4 +1,4 @@
-# 幸运炒股机（Lucky Stock Machine）
+# 幸运炒股公司（Lucky Stock Company）
 
 一个轻策略卡牌式股票模拟网页原型，围绕「开盘 -> 增持 -> 交付 -> 强化」形成单局循环。
 
