@@ -1,24 +1,49 @@
-# 幸运炒股机（Lucky Stock Machine）
+<div align="center">
 
-## 在线游玩
+# 🎰 幸运炒股机 Lucky Stock Machine
 
-- [点击游玩（推荐）](https://raw.githack.com/WEIZHIHANG1120/-lucky-/main/index.html)
+<p>
+  <img alt="version" src="https://img.shields.io/badge/version-4.0-red?style=for-the-badge">
+  <img alt="type" src="https://img.shields.io/badge/type-web%20game-green?style=for-the-badge">
+  <img alt="status" src="https://img.shields.io/badge/status-playable-gold?style=for-the-badge">
+</p>
 
-## 项目简介
+<p>
+  <a href="https://raw.githack.com/WEIZHIHANG1120/-lucky-/main/index.html">
+    <img alt="play now" src="https://img.shields.io/badge/▶%20点击在线游玩-ff4d4f?style=for-the-badge">
+  </a>
+</p>
 
-一个轻策略卡牌式股票模拟网页原型，围绕「开盘 -> 增持 -> 交付 -> 强化」形成单局循环。
+<p>
+  <a href="https://cdn.jsdelivr.net/gh/WEIZHIHANG1120/-lucky-@main/index.html">
+    备用入口（CDN）
+  </a>
+</p>
 
-## 核心玩法
+</div>
 
-- 12 轮关卡目标推进，逐轮完成交易额要求
+---
+
+## 🎮 游戏简介
+
+一个轻策略卡牌式股票模拟网页原型，核心循环是：  
+**开盘 → 增持 → 交付 → 强化**
+
+## ✨ 核心特色
+
+- 12 轮目标推进，逐轮冲刺交易额
 - 多资金池协同（普通池 / 助涨池 / 保险池）
-- 回合内交易卡决策与回合后强化成长并行
-- 开盘结果即时可视化反馈（上涨/下跌）
+- 交易卡与强化卡双线成长
+- 开盘结果即时反馈（上涨红、下跌绿）
 
-## 目录结构
+## 🚀 本地运行
 
-- `index.html`：主入口页面
-- `scripts/`：核心逻辑与配置
-- `styles/`：样式文件
-- `assets/`：美术与音频资源
-- `docs/`：策划文档与设计说明
+直接用浏览器打开 `index.html` 即可。
+
+## 📁 结构
+
+- `index.html`：主入口
+- `scripts/`：逻辑与配置
+- `styles/`：界面样式
+- `assets/`：美术与音频
+- `docs/`：策划与说明
